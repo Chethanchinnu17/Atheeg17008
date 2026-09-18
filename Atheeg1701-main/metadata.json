@@ -1,0 +1,6 @@
+{
+  "name": "Atheeg Test",
+  "description": "Production-grade online quiz and exam platform with candidate registration, timed multi-level tests, proctoring, and full admin control panel.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
