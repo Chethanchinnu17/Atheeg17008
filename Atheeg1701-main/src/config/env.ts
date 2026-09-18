@@ -17,8 +17,8 @@ export const FIREBASE_CONFIG = {
 };
 
 export const ADMIN_LOGIN_CONFIG = {
-  email: getEnv('VITE_ADMIN_EMAIL') || 'admin@atheeg.test',
-  password: getEnv('VITE_ADMIN_PASSWORD') || 'admin123',
+  email: getEnv('VITE_ADMIN_EMAIL') || 'madderlachethan@gmauil.com',
+  password: getEnv('VITE_ADMIN_PASSWORD') || '8008104299C',
 };
 
 export const isFirebaseConfigured = Object.values(FIREBASE_CONFIG).every(Boolean);
