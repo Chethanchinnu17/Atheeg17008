@@ -25,6 +25,10 @@ export interface Test {
   levels: TestLevel[];
   published: boolean;
   createdAt: string;
+  opensAt?: string; // ISO datetime when the test is first available
+  closesAt?: string; // ISO datetime when the test stops accepting attempts
+  allowedStartTime?: string; // e.g. '09:00'
+  allowedEndTime?: string; // e.g. '18:00'
 }
 
 export interface Candidate {

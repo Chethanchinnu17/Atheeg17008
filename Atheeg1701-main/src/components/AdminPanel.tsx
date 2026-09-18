@@ -95,6 +95,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }, 4000);
   };
 
+  const toDateTimeLocalValue = (value?: string) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 16);
+  };
+
   // Settings form state
   const [proctoringToggle, setProctoringToggle] = useState(settings.proctoringEnabled);
   const [autoEndTabToggle, setAutoEndTabToggle] = useState(settings.autoEndOnTabSwitch ?? true);
@@ -1252,6 +1261,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <option value="published">Published &amp; Active</option>
                     <option value="draft">Draft (Hidden)</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Open Date</label>
+                  <input
+                    type="datetime-local"
+                    value={toDateTimeLocalValue(editingTest.opensAt)}
+                    onChange={(e) => setEditingTest({ ...editingTest, opensAt: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Close Date</label>
+                  <input
+                    type="datetime-local"
+                    value={toDateTimeLocalValue(editingTest.closesAt)}
+                    onChange={(e) => setEditingTest({ ...editingTest, closesAt: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Allowed Start Time</label>
+                  <input
+                    type="time"
+                    value={editingTest.allowedStartTime || ''}
+                    onChange={(e) => setEditingTest({ ...editingTest, allowedStartTime: e.target.value })}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Allowed End Time</label>
+                  <input
+                    type="time"
+                    value={editingTest.allowedEndTime || ''}
+                    onChange={(e) => setEditingTest({ ...editingTest, allowedEndTime: e.target.value })}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
                 </div>
               </div>
 

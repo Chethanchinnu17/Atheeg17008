@@ -105,6 +105,38 @@ export default function App() {
     }, 4000);
   };
 
+  const isTestAvailable = (test: Test) => {
+    const now = new Date();
+
+    if (test.opensAt) {
+      const opensAt = new Date(test.opensAt);
+      if (Number.isNaN(opensAt.getTime()) || opensAt.getTime() > now.getTime()) {
+        return false;
+      }
+    }
+
+    if (test.closesAt) {
+      const closesAt = new Date(test.closesAt);
+      if (Number.isNaN(closesAt.getTime()) || closesAt.getTime() < now.getTime()) {
+        return false;
+      }
+    }
+
+    if (test.allowedStartTime && test.allowedEndTime) {
+      const [startHour, startMinute] = test.allowedStartTime.split(':').map(Number);
+      const [endHour, endMinute] = test.allowedEndTime.split(':').map(Number);
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const startMinutes = startHour * 60 + startMinute;
+      const endMinutes = endHour * 60 + endMinute;
+
+      if (nowMinutes < startMinutes || nowMinutes > endMinutes) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   // Sync data from localStorage
   const refreshAppData = () => {
     initializeStorage();
@@ -148,6 +180,11 @@ export default function App() {
 
     if (!test) {
       showToast(`Test with code "${trimmed}" was not found. Please verify the code or try the demo test code "ATH-GK101".`);
+      return;
+    }
+
+    if (!isTestAvailable(test)) {
+      showToast('This assessment is not currently available within its scheduling window.');
       return;
     }
 
@@ -253,7 +290,7 @@ export default function App() {
         {currentView === 'landing' && (
           <LandingPage
             onNavigate={handleNavigate}
-            availableTests={tests.filter((t) => t.published)}
+            availableTests={tests.filter((t) => t.published && isTestAvailable(t))}
             onStartExamByCode={handleStartExamByCode}
             isCandidateLoggedIn={!!currentCandidate}
             isAdminLoggedIn={isAdmin}
@@ -291,7 +328,7 @@ export default function App() {
         {currentView === 'candidate-dashboard' && currentCandidate && (
           <CandidateDashboard
             candidate={currentCandidate}
-            tests={tests.filter((t) => t.published)}
+            tests={tests.filter((t) => t.published && isTestAvailable(t))}
             attempts={attempts}
             onStartExamByCode={handleStartExamByCode}
             onViewAttemptResult={(att) => {
