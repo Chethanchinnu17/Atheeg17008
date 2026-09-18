@@ -49,12 +49,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
     }
   };
 
-  const fillExactAdminCredentials = () => {
-    setEmail(ADMIN_CREDENTIALS.email);
-    setPassword(ADMIN_CREDENTIALS.password);
-    setErrorMsg('');
-  };
-
   return (
     <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center px-4 py-12 relative">
       {/* Background Glow */}
@@ -152,19 +146,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
             </button>
           </form>
 
-          {/* Prompt compliance info & Quick credentials filler for testing */}
-          <div className="mt-6 pt-4 border-t border-slate-200 flex flex-col items-center gap-2 text-center">
-            <span className="text-[11px] text-slate-500">
-              Only hardcoded primary admin credentials are authenticated.
-            </span>
-            <button
-              type="button"
-              onClick={fillExactAdminCredentials}
-              className="text-xs text-blue-600 hover:text-blue-700 font-semibold cursor-pointer underline underline-offset-2"
-            >
-              Fill Authorized Admin Credentials
-            </button>
-          </div>
         </div>
       </div>
     </div>
