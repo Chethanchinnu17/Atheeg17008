@@ -34,7 +34,9 @@ import {
   saveSettings,
   resetAllData,
   getSnapshotsForAttempt,
-  getEventsForAttempt
+  getEventsForAttempt,
+  saveCandidate,
+  deleteCandidate
 } from '../utils/storage';
 import { exportAttemptsToCSV, generateCandidateResultPDF } from '../utils/pdfGenerator';
 import { CsvUploadModal } from './CsvUploadModal';
@@ -62,6 +64,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Search & Filter states
   const [searchQuery, setSearchQuery] = useState('');
+  const [candidateForm, setCandidateForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: ''
+  });
+  const [candidateFormError, setCandidateFormError] = useState('');
 
   // Test editor modal state
   const [editingTest, setEditingTest] = useState<Test | null>(null);
@@ -176,6 +185,61 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
     setAttemptToDelete(null);
     showNotification(`Candidate attempt for "${testTitle}" has been deleted.`);
+    onRefreshData();
+  };
+
+  const handleAddCandidate = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCandidateFormError('');
+
+    const name = candidateForm.name.trim();
+    const email = candidateForm.email.trim().toLowerCase();
+    const phone = candidateForm.phone.replace(/\D/g, '');
+    const password = candidateForm.password.trim();
+
+    if (!name || !email || !phone || !password) {
+      setCandidateFormError('Please complete all student fields.');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setCandidateFormError('Please provide a valid email address.');
+      return;
+    }
+
+    if (phone.length !== 10) {
+      setCandidateFormError('Phone number must be exactly 10 digits.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setCandidateFormError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (candidates.some(c => c.email.toLowerCase() === email)) {
+      setCandidateFormError('A student with this email already exists.');
+      return;
+    }
+
+    const newCandidate: Candidate = {
+      id: `cand_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      name,
+      email,
+      phone,
+      password,
+      createdAt: new Date().toISOString()
+    };
+
+    saveCandidate(newCandidate);
+    setCandidateForm({ name: '', email: '', phone: '', password: '' });
+    showNotification(`${name} has been added as a student.`);
+    onRefreshData();
+  };
+
+  const handleDeleteCandidate = (candidate: Candidate) => {
+    deleteCandidate(candidate.id);
+    showNotification(`${candidate.name} has been removed from student records.`);
     onRefreshData();
   };
 
@@ -603,7 +667,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 font-['Poppins']">Registered Candidates</h3>
-                  <p className="text-xs text-slate-500">View enrolled candidates stored in the database.</p>
+                  <p className="text-xs text-slate-500">View, add, and remove enrolled student records.</p>
                 </div>
                 <div className="w-full sm:w-64">
                   <div className="relative">
@@ -619,6 +683,73 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
 
+              <form onSubmit={handleAddCandidate} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-sm font-bold text-slate-900 font-['Poppins']">Add New Student</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1.5">Full Name</label>
+                    <input
+                      type="text"
+                      value={candidateForm.name}
+                      onChange={(e) => setCandidateForm({ ...candidateForm, name: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      placeholder="Student name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1.5">Email</label>
+                    <input
+                      type="email"
+                      value={candidateForm.email}
+                      onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      placeholder="student@email.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1.5">Phone</label>
+                    <input
+                      type="tel"
+                      value={candidateForm.phone}
+                      onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      placeholder="9876543210"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1.5">Password</label>
+                    <input
+                      type="text"
+                      value={candidateForm.password}
+                      onChange={(e) => setCandidateForm({ ...candidateForm, password: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      placeholder="Minimum 6 characters"
+                    />
+                  </div>
+                </div>
+
+                {candidateFormError && (
+                  <div className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                    {candidateFormError}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                  >
+                    Save Student
+                  </button>
+                </div>
+              </form>
+
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs text-slate-600">
@@ -629,6 +760,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <th className="py-3 px-4">Phone Number</th>
                         <th className="py-3 px-4">Enrolled Date</th>
                         <th className="py-3 px-4">Exams Completed</th>
+                        <th className="py-3 px-4 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
@@ -651,6 +783,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[11px]">
                                   {userAttemptsCount} Tests
                                 </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCandidate(c)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold cursor-pointer"
+                                >
+                                  Delete
+                                </button>
                               </td>
                             </tr>
                           );

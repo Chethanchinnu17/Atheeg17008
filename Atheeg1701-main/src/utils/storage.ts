@@ -152,6 +152,45 @@ export function saveCandidate(candidate: Candidate): void {
   safeSetItem(KEYS.CANDIDATES, JSON.stringify(list));
 }
 
+// In production: Replace with `DELETE /api/candidates/:id`
+export function deleteCandidate(candidateId: string): boolean {
+  try {
+    const cleanId = String(candidateId).trim();
+    const candidates = getCandidates().filter(c => String(c.id).trim() !== cleanId);
+    safeSetItem(KEYS.CANDIDATES, JSON.stringify(candidates));
+
+    const attemptIds = getAttempts()
+      .filter(a => a.candidateId === cleanId)
+      .map(a => a.id);
+
+    if (attemptIds.length > 0) {
+      const remainingAttempts = getAttempts().filter(a => !attemptIds.includes(a.id));
+      safeSetItem(KEYS.ATTEMPTS, JSON.stringify(remainingAttempts));
+
+      try {
+        const rawSnaps = safeGetItem(KEYS.SNAPSHOTS);
+        if (rawSnaps) {
+          const snaps: ProctoringSnapshot[] = JSON.parse(rawSnaps);
+          safeSetItem(KEYS.SNAPSHOTS, JSON.stringify(snaps.filter(s => !attemptIds.includes(s.attemptId))));
+        }
+      } catch {}
+
+      try {
+        const rawEvents = safeGetItem(KEYS.EVENTS);
+        if (rawEvents) {
+          const evts: ProctoringEvent[] = JSON.parse(rawEvents);
+          safeSetItem(KEYS.EVENTS, JSON.stringify(evts.filter(e => !attemptIds.includes(e.attemptId))));
+        }
+      } catch {}
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Error deleting candidate', err);
+    return false;
+  }
+}
+
 // In production: Replace with `GET /api/candidates/:id`
 export function getCandidateById(id: string): Candidate | null {
   const list = getCandidates();
