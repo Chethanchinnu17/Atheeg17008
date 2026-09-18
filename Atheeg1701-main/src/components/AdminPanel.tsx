@@ -109,6 +109,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     : 0;
   const passCount = attempts.filter(a => a.percentage >= 60).length;
   const passRate = totalAttempts > 0 ? Math.round((passCount / totalAttempts) * 100) : 0;
+  const bestAttempt = attempts.reduce<Attempt | null>((best, current) => {
+    if (!best || current.percentage > best.percentage) return current;
+    return best;
+  }, null);
+  const topPerformer = bestAttempt ? bestAttempt.candidateName : 'N/A';
+  const topTest = attempts.length > 0
+    ? attempts.reduce<Record<string, number>>((acc, attempt) => {
+        acc[attempt.testTitle] = (acc[attempt.testTitle] || 0) + 1;
+        return acc;
+      }, {})
+    : {};
+  const mostAttemptedTest = Object.entries(topTest).sort((a, b) => b[1] - a[1])[0];
+  const recentResults = [...attempts].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).slice(0, 6);
 
   // Handler to open Attempt Audit Modal
   const handleOpenAuditModal = (attempt: Attempt) => {
@@ -904,8 +917,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {activeTab === 'analytics' && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 font-['Poppins']">Platform Analytics &amp; Metrics</h3>
-                <p className="text-xs text-slate-500">Performance distribution, pass rates, and candidate volume.</p>
+                <h3 className="text-lg font-bold text-slate-900 font-['Poppins']">Results Analytics</h3>
+                <p className="text-xs text-slate-500">Track student outcomes, score trends, and performance by assessment.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <div className="text-[11px] uppercase font-semibold text-slate-500">Total attempts</div>
+                  <div className="mt-2 text-2xl font-black text-slate-900 font-['Poppins']">{totalAttempts}</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <div className="text-[11px] uppercase font-semibold text-slate-500">Average score</div>
+                  <div className="mt-2 text-2xl font-black text-blue-600 font-['Poppins']">{avgScore}%</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <div className="text-[11px] uppercase font-semibold text-slate-500">Top performer</div>
+                  <div className="mt-2 text-base font-bold text-emerald-600">{topPerformer}</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <div className="text-[11px] uppercase font-semibold text-slate-500">Most attempted test</div>
+                  <div className="mt-2 text-sm font-bold text-slate-900">{mostAttemptedTest ? mostAttemptedTest[0] : 'No data'}</div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-bold text-slate-900 font-['Poppins']">Recent Results</h4>
+                  <span className="text-[11px] text-slate-500">Latest submissions</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-600">
+                    <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] border-b border-slate-200">
+                      <tr>
+                        <th className="py-3 px-4">Student</th>
+                        <th className="py-3 px-4">Test</th>
+                        <th className="py-3 px-4">Score</th>
+                        <th className="py-3 px-4">Percent</th>
+                        <th className="py-3 px-4">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {recentResults.map((attempt) => (
+                        <tr key={attempt.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-4 text-slate-900 font-semibold">{attempt.candidateName}</td>
+                          <td className="py-3.5 px-4">{attempt.testTitle}</td>
+                          <td className="py-3.5 px-4">{attempt.score}/{attempt.totalQuestions}</td>
+                          <td className="py-3.5 px-4">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              attempt.percentage >= 60
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}>
+                              {attempt.percentage}%
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-500">{new Date(attempt.submittedAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
