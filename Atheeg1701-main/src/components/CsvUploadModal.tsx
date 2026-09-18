@@ -136,7 +136,7 @@ export const CsvUploadModal: React.FC<CsvUploadModalProps> = ({ isOpen, onClose,
   };
 
   // Save the parsed quiz
-  const handleSaveQuiz = () => {
+  const handleSaveQuiz = async () => {
     if (!parseResult || !parseResult.test) return;
 
     const finalTest: Test = {
@@ -146,7 +146,7 @@ export const CsvUploadModal: React.FC<CsvUploadModalProps> = ({ isOpen, onClose,
       description: quizDescription.trim() || parseResult.test.description
     };
 
-    saveTest(finalTest);
+    await saveTest(finalTest);
     setPublishedTest(finalTest);
     onSuccess(finalTest);
   };

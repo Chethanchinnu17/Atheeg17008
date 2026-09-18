@@ -126,7 +126,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
       imageData,
       reason
     };
-    saveSnapshot(snap);
+    void saveSnapshot(snap).catch((error) => console.error('Unable to save proctoring snapshot', error));
     return imageData;
   };
 
@@ -208,7 +208,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
             : 'Candidate switched browser tab or minimized window. Violation photo captured.',
           snapshotData: photo
         };
-        logProctoringEvent(event);
+        void logProctoringEvent(event).catch((error) => console.error('Unable to save proctoring event', error));
 
         if (shouldAutoEnd) {
           isTerminatedRef.current = true;
@@ -242,7 +242,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
         timestamp: new Date().toISOString(),
         details: 'Candidate window lost focus'
       };
-      logProctoringEvent(event);
+      void logProctoringEvent(event).catch((error) => console.error('Unable to save proctoring event', error));
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -365,8 +365,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
       terminationReason: options?.terminationReason || undefined
     };
 
-    // Save to localStorage
-    saveAttempt(attempt);
+    void saveAttempt(attempt).catch((error) => console.error('Unable to save examination attempt', error));
 
     // Call callback if requested
     if (triggerCallback) {

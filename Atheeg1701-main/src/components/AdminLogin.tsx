@@ -27,8 +27,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
     const enteredPassword = password;
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, normalizedEmail, enteredPassword);
-      if (credential.user.email) {
+      const credential = auth ? await signInWithEmailAndPassword(auth, normalizedEmail, enteredPassword) : null;
+      const isConfiguredAdmin =
+        normalizedEmail === ADMIN_CREDENTIALS.email.toLowerCase() &&
+        enteredPassword === ADMIN_CREDENTIALS.password;
+      if (credential?.user.email && isConfiguredAdmin) {
         setAdminSession(true);
         onSuccessAdminLogin();
         return;

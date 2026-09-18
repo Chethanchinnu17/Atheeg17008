@@ -133,10 +133,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const recentResults = [...attempts].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).slice(0, 6);
 
   // Handler to open Attempt Audit Modal
-  const handleOpenAuditModal = (attempt: Attempt) => {
+  const handleOpenAuditModal = async (attempt: Attempt) => {
     setSelectedAttemptForAudit(attempt);
-    const snaps = getSnapshotsForAttempt(attempt.id);
-    const evts = getEventsForAttempt(attempt.id);
+    const [snaps, evts] = await Promise.all([
+      getSnapshotsForAttempt(attempt.id),
+      getEventsForAttempt(attempt.id)
+    ]);
     setAuditSnapshots(snaps);
     setAuditEvents(evts);
   };
@@ -175,10 +177,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Handler to save test
-  const handleSaveTestSubmit = (e: React.FormEvent) => {
+  const handleSaveTestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTest) return;
-    saveTest(editingTest);
+    await saveTest(editingTest);
     setIsTestModalOpen(false);
     setEditingTest(null);
     showNotification('Assessment test saved successfully.');
@@ -186,10 +188,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // In-app handler to permanently delete test
-  const handleConfirmDeleteTest = () => {
+  const handleConfirmDeleteTest = async () => {
     if (!testToDelete) return;
     const testTitle = testToDelete.title;
-    deleteTest(testToDelete.id);
+    await deleteTest(testToDelete.id);
     setTestToDelete(null);
     showNotification(`Test "${testTitle}" has been permanently deleted.`);
     onRefreshData();
@@ -210,7 +212,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onRefreshData();
   };
 
-  const handleAddCandidate = (e: React.FormEvent) => {
+  const handleAddCandidate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCandidateFormError('');
 
@@ -253,22 +255,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    saveCandidate(newCandidate);
+    await saveCandidate(newCandidate);
     setCandidateForm({ name: '', email: '', phone: '', password: '' });
     showNotification(`${name} has been added as a student.`);
     onRefreshData();
   };
 
-  const handleDeleteCandidate = (candidate: Candidate) => {
-    deleteCandidate(candidate.id);
+  const handleDeleteCandidate = async (candidate: Candidate) => {
+    await deleteCandidate(candidate.id);
     showNotification(`${candidate.name} has been removed from student records.`);
     onRefreshData();
   };
 
   // Handler for saving settings
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveSettings({
+    await saveSettings({
       ...settings,
       proctoringEnabled: proctoringToggle,
       autoEndOnTabSwitch: autoEndTabToggle,
@@ -279,8 +281,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Handler for resetting all data
-  const handleConfirmResetData = () => {
-    resetAllData();
+  const handleConfirmResetData = async () => {
+    await resetAllData();
     setShowResetConfirm(false);
     showNotification('Platform demonstration data reset to clean seeds.');
     onRefreshData();

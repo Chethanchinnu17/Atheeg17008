@@ -149,7 +149,7 @@ export const AdminCsvUploadView: React.FC<AdminCsvUploadViewProps> = ({
   };
 
   // Save the parsed quiz
-  const handleSaveQuiz = () => {
+  const handleSaveQuiz = async () => {
     if (!parseResult || !parseResult.test) return;
 
     const finalTest: Test = {
@@ -159,7 +159,7 @@ export const AdminCsvUploadView: React.FC<AdminCsvUploadViewProps> = ({
       description: quizDescription.trim() || parseResult.test.description
     };
 
-    saveTest(finalTest);
+    await saveTest(finalTest);
     setPublishedTest(finalTest);
     onSuccess(finalTest);
   };

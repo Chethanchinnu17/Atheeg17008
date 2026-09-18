@@ -7,11 +7,17 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: PORT
-        value: 5000
       - key: FRONTEND_URL
-        value: https://your-vercel-frontend-url.vercel.app
+        value: https://atheeg17008.vercel.app
       - key: GEMINI_API_KEY
         sync: false
       - key: GOOGLE_API_KEY
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_DATABASE_URL
         sync: false

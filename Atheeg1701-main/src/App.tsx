@@ -138,17 +138,18 @@ export default function App() {
   };
 
   // Sync data from localStorage
-  const refreshAppData = () => {
-    initializeStorage();
-    const storedTests = getTests();
-    const storedCandidates = getCandidates();
-    const storedAttempts = getAttempts();
-    const storedSettings = getSettings();
+  const refreshAppData = async () => {
+    await initializeStorage();
+    const [storedTests, storedCandidates, storedAttempts] = await Promise.all([
+      getTests(),
+      getCandidates(),
+      getAttempts()
+    ]);
 
     setTests(storedTests);
     setCandidates(storedCandidates);
     setAttempts(storedAttempts);
-    setSettings(storedSettings);
+    setSettings(getSettings());
 
     const adminLoggedIn = isAdminSessionActive();
     setIsAdmin(adminLoggedIn);
@@ -158,7 +159,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    refreshAppData();
+    refreshAppData().catch((error) => showToast(error instanceof Error ? error.message : 'Unable to load shared application data.'));
   }, []);
 
   // Navigation handler
@@ -174,9 +175,9 @@ export default function App() {
   };
 
   // Launch test by code
-  const handleStartExamByCode = (code: string) => {
+  const handleStartExamByCode = async (code: string) => {
     const trimmed = code.trim().toUpperCase();
-    const test = getTestByCode(trimmed);
+    const test = await getTestByCode(trimmed);
 
     if (!test) {
       showToast(`Test with code "${trimmed}" was not found. Please verify the code or try the demo test code "ATH-GK101".`);
@@ -200,18 +201,18 @@ export default function App() {
   };
 
   // When an exam is finished
-  const handleFinishExam = (attempt: Attempt) => {
+  const handleFinishExam = async (attempt: Attempt) => {
     setActiveAttempt(attempt);
-    refreshAppData();
+    await refreshAppData();
     setCurrentView('result');
     safeSetItem('atheeg_current_view', 'result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Handler to delete an attempt
-  const handleDeleteAttempt = (attemptId: string) => {
-    deleteAttempt(attemptId);
-    refreshAppData();
+  const handleDeleteAttempt = async (attemptId: string) => {
+    await deleteAttempt(attemptId);
+    await refreshAppData();
     showToast('Examination record deleted.');
   };
 

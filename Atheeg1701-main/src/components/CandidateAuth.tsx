@@ -49,19 +49,19 @@ export const CandidateAuth: React.FC<CandidateAuthProps> = ({
     }
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      const existingCandidate = getCandidates().find(c => c.email.toLowerCase() === email);
+      const credential = auth ? await signInWithEmailAndPassword(auth, email, password) : null;
+      const existingCandidate = (await getCandidates()).find(c => c.email.toLowerCase() === email);
       const candidate: Candidate = existingCandidate || {
-        id: credential.user.uid || `cand_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        name: credential.user.displayName || email.split('@')[0],
+        id: credential?.user.uid || `cand_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        name: credential?.user.displayName || email.split('@')[0],
         email,
-        phone: credential.user.phoneNumber || '',
+        phone: credential?.user.phoneNumber || '',
         password,
         createdAt: new Date().toISOString()
       };
 
       if (!existingCandidate) {
-        saveCandidate(candidate);
+        await saveCandidate(candidate);
       }
 
       setCandidateSession(candidate.id);
@@ -71,7 +71,13 @@ export const CandidateAuth: React.FC<CandidateAuthProps> = ({
       console.warn('Firebase candidate login failed, falling back to local auth flow.', firebaseError);
     }
 
-    const candidates = getCandidates();
+    let candidates: Candidate[];
+    try {
+      candidates = await getCandidates();
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : 'Unable to reach the examination server.');
+      return;
+    }
     const candidate = candidates.find(c => c.email.toLowerCase() === email);
 
     if (!candidate || candidate.password !== password) {
@@ -127,7 +133,13 @@ export const CandidateAuth: React.FC<CandidateAuthProps> = ({
       return;
     }
 
-    const candidates = getCandidates();
+    let candidates: Candidate[];
+    try {
+      candidates = await getCandidates();
+    } catch (error) {
+      setRegError(error instanceof Error ? error.message : 'Unable to reach the examination server.');
+      return;
+    }
     const existing = candidates.find(c => c.email.toLowerCase() === email);
     if (existing) {
       setRegError('Email already registered');
@@ -135,9 +147,9 @@ export const CandidateAuth: React.FC<CandidateAuthProps> = ({
     }
 
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      const credential = auth ? await createUserWithEmailAndPassword(auth, email, password) : null;
       const newCandidate: Candidate = {
-        id: credential.user.uid || `cand_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        id: credential?.user.uid || `cand_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         name,
         email,
         phone: phoneDigits,
@@ -145,7 +157,7 @@ export const CandidateAuth: React.FC<CandidateAuthProps> = ({
         createdAt: new Date().toISOString()
       };
 
-      saveCandidate(newCandidate);
+      await saveCandidate(newCandidate);
       setRegSuccessToast('Registration successful! Please log in.');
       setLoginEmail(email);
       setLoginPassword('');
@@ -165,7 +177,7 @@ export const CandidateAuth: React.FC<CandidateAuthProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    saveCandidate(newCandidate);
+    await saveCandidate(newCandidate);
     setRegSuccessToast('Registration successful! Please log in.');
     setLoginEmail(email);
     setLoginPassword('');
